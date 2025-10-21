@@ -1,26 +1,95 @@
-from flask import Flask
+from flask import Flask, request, render_template, redirect, url_for
 from markupsafe import escape
 import pandas as pd
-#how to make a virtual environment
-MovieRecomender = Flask(__name__)
-@MovieRecomender.route('/')
+MovieRecomender = Flask(__name__,template_folder='templates')
+
+df=pd.read_csv('imdblist.csv')
+df_clean=df.drop(['Meta_score','Gross','Certificate'],axis=1)
+df_clean['Released_Year'].unique()
+df_clean=df_clean[df_clean.Released_Year!='PG']
+df_split = df_clean['Genre'].str.split(',',expand=True)
+df_clean=pd.concat([df_clean,df_split],axis=1)
+df_clean.rename(columns={df_clean.columns[13]:'Genre1'},inplace=True)
+df_clean.rename(columns={df_clean.columns[14]:'Genre2'},inplace=True)
+df_clean.rename(columns={df_clean.columns[15]:'Genre3'},inplace=True)
+
+@MovieRecomender.route('/', methods=['GET','POST'])
+def root():
+    return redirect(url_for('Movie_Recomender'))
+@MovieRecomender.route('/recomendation', methods=['GET','POST'])
 def Movie_Recomender():
-    return 
-    
+    results=[]
+    if request.method =='POST':
+
+        director=request.form['director'].strip().lower()
+        genre=request.form['genre'].strip().lower()
+        ao1=request.form['ao1'].lower()
+        ao2=request.form['ao2'].lower()
+        Actor=request.form['Actor'].strip().lower()
+        count=0
+        if director != '-1':
+            director_data=[]
+            for i in range(len(df_clean)):
+                if df_clean.iloc[i].Director.lower() == director:
+                    director_d={'Title':df_clean.iloc[i].Series_Title,
+                    'IMDB rating':df_clean.iloc[i].IMDB_Rating,
+                    'Overview':df_clean.iloc[i].Overview,
+                    'Genre':df_clean.iloc[i].Genre,
+                    'Star1':df_clean.iloc[i].Star1,
+                    'Star2':df_clean.iloc[i].Star2,
+                    'Star3':df_clean.iloc[i].Star3,
+                    'Star4':df_clean.iloc[i].Star4}
+                    director_data.append(director_d)
+            df_new=pd.DataFrame(director_data)
+        if genre != '-1':
+            if ao1 == 'and':
+                while count < len(df_new):
+                    if genre not in df_new.iloc[count].Genre.lower():
+                        df_new=df_new.drop(df_new.index[count])
+                        count=count-1
+                    count=count+1
+            else:
+                genre_data=[]
+                for j in range(len(df_clean)):
+                    if genre in df_clean.iloc[j].Genre.lower():
+                        genre_d={'Title':df_clean.iloc[j].Series_Title,
+                        'IMDB rating':df_clean.iloc[j].IMDB_Rating,
+                        'Overview':df_clean.iloc[j].Overview,
+                        'Genre':df_clean.iloc[j].Genre,
+                        'Star1':df_clean.iloc[j].Star1,
+                        'Star2':df_clean.iloc[j].Star2,
+                        'Star3':df_clean.iloc[j].Star3,
+                        'Star4':df_clean.iloc[j].Star4}
+                        genre_data.append(genre_d)
+                df_with_genre = pd.DataFrame(genre_data)
+                df_new=pd.concat([df_new,df_with_genre],ignore_index=True)
+                df_new=df_new.drop_duplicates()
+        count = 0
+        if Actor != '-1':
+            if ao2=='and':
+                while count < len(df_new):
+                    if (Actor != df_new.iloc[count].Star1.lower())and(Actor != df_new.iloc[count].Star2.lower())and(Actor != df_new.iloc[count].Star3.lower())and(Actor != df_new.iloc[count].Star4.lower()):
+                        df_new=df_new.drop(df_new.index[count])
+                        count=count-1
+                    count=count+1
+            else:
+                actor_data=[]
+                for k in range(len(df_clean)):
+                    if (Actor == df_clean.iloc[k].Star1.lower())or(Actor == df_clean.iloc[k].Star2.lower())or(Actor == df_clean.iloc[k].Star3.lower())or(Actor == df_clean.iloc[k].Star4.lower()):
+                        actor_d={'Title':df_clean.iloc[k].Series_Title,
+                        'IMDB rating':df_clean.iloc[k].IMDB_Rating,
+                        'Overview':df_clean.iloc[k].Overview,
+                        'Genre':df_clean.iloc[k].Genre,
+                        'Star1':df_clean.iloc[k].Star1,
+                        'Star2':df_clean.iloc[k].Star2,
+                        'Star3':df_clean.iloc[k].Star3,
+                        'Star4':df_clean.iloc[k].Star4}
+                        actor_data.append(actor_d)
+                df_with_actor=pd.DataFrame(actor_data)
+                df_new=pd.concat([df_new,df_with_actor],ignore_index=True)
+                df_new=df_new.drop_duplicates()
+        results=df_new['Title'].tolist()
+    return render_template('template_1.html',results=results)
+
 if __name__ == '__main__':
     MovieRecomender.run(debug=True,use_reloader=False)
-# @MovieRecomender.route('/user/<username>')
-# def show_user_profile(username):
-#     # show the user profile for that user
-#     return f'User {escape(username)}'
-
-# @MovieRecomender.route('/post/<int:post_id>')
-# def show_post(post_id):
-#     # show the post with the given id, the id is an integer
-#     return f'Post {post_id}'
-
-# @MovieRecomender.route('/path/<path:subpath>')
-# def show_subpath(subpath):
-#     # show the subpath after /path/
-#     return f'Subpath {escape(subpath)}'
-    

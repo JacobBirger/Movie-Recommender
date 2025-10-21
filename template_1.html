@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Jacob's Movie Recomender</title>
+    </head>
+    <body>
+        <h1>Feel free to try out my movie Recomender</h1>
+        <form method="post">
+            Director: <input name="director"><br>
+            and/or: <input name="ao1"><br>
+            Genre: <input name="genre"><br>
+            and/or: <input name="ao2"><br>
+            Actor: <input name="Actor"><br>
+            <button type="submit">Search</button>
+        </form>
+        {% if results %}
+            <h2>Recommendations:</h2>
+            <ul>
+                {% for title in results %}
+                    <li>{{title}}</li>
+                {% endfor %}
+            </ul>
+        {% elif request.method == 'POST' %}
+            <p>No matches found</p>
+        {% endif %}
+    </body>
+</html>
