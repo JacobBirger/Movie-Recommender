@@ -1,20 +1,57 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
         <title>Jacob's Movie Recomender</title>
+        <style>
+            .suggestions{
+                    position: absolute;
+                    background: rgba(255, 255, 255, 0.95) !important;
+                    z-index: 9999 !important;
+                    max-height: 200px;
+                    overflow-y: auto;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                }
+                .suggestion {
+                    padding: 6px 8px;
+                    cursor: pointer;
+                }
+                .suggestion:hover {
+                    background: #efefef;
+                }
+        </style>
     </head>
     <body>
-        <h1>Feel free to try out my movie Recomender</h1>
+        <h1>Movie Recomender</h1>
+        <h2>Type -1 if you have no prefrence in either director or genre or actor</h2>
+        <h3>Beta</h3>
         <form method="post">
-            Director: <input name="director"><br>
-            and/or: <input name="ao1"><br>
-            Genre: <input name="genre"><br>
-            and/or: <input name="ao2"><br>
-            Actor: <input name="Actor"><br>
+            <div class="field-group">
+                <label for ="director-input">Director</label>
+                <input id="director-input" name="director" autocomplete="off">
+                <div id="director-suggestions" class="suggestions"></div>
+                <label for="ao1">and/or</label>
+                <input name="ao1" class="sub-input">
+            </div>
+            
+            <div class="field-group">
+                <label for="genre-input">Genre</label>
+                <input id="genre-input" name="genre" autocomplete="off">
+                <div id="genre-suggestions" class="suggestions"></div>
+                <label>and/or</label>
+                <input name="ao2" class="sub-input">
+            </div>
+            
+            <div class="field-group">
+                <label for="actor-input">Actor</label>
+                <input id="actor-input" name="Actor" autocomplete="off">
+                <div id="actor-suggestions" class="suggestions"></div>
+            </div>
+            
             <button type="submit">Search</button>
         </form>
         {% if results %}
-            <h2>Recommendations:</h2>
+            <h1>Recommendations:</h1>
             <ul>
                 {% for title in results %}
                     <li>{{title}}</li>
@@ -23,5 +60,61 @@
         {% elif request.method == 'POST' %}
             <p>No matches found</p>
         {% endif %}
+
+
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+
+            // Set up autocomplete for each input field
+            setupAutocomplete('director-input', 'director-suggestions', 'director');
+            setupAutocomplete('genre-input', 'genre-suggestions', 'genre');
+            setupAutocomplete('actor-input', 'actor-suggestions', 'actor');
+
+            function setupAutocomplete(inputId, suggestionBoxId, fieldType) {
+                const input = document.getElementById(inputId);
+                const suggestionBox = document.getElementById(suggestionBoxId);
+
+                input.addEventListener('input', async () => {
+                const query = input.value.trim();
+                if (!query) {
+                    suggestionBox.innerHTML = '';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/suggest?q=${encodeURIComponent(query)}&field=${fieldType}`);
+                    const data = await response.json();
+
+                    // Flask route returns [[...]] instead of [...]
+                    const suggestions = data[0] || [];
+                    suggestionBox.innerHTML = '';
+
+                    // Populate the dropdown
+                    suggestions.forEach(item => {
+                    const div = document.createElement('div');
+                    div.classList.add('suggestion');
+                    div.textContent = item;
+                    div.addEventListener('click', () => {
+                        input.value = item;
+                        suggestionBox.innerHTML = ''; // Clear after selecting
+                    });
+                    suggestionBox.appendChild(div);
+                    });
+                } catch (err) {
+                    console.error('Error fetching suggestions:', err);
+                }
+                });
+
+                // Hide suggestions if user clicks outside
+                document.addEventListener('click', (event) => {
+                if (!input.contains(event.target) && !suggestionBox.contains(event.target)) {
+                    suggestionBox.innerHTML = '';
+                }
+                });
+            }
+            });
+            </script>
+
     </body>
 </html>

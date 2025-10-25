@@ -1,0 +1,63 @@
+form {
+  max-width: 600px;
+  margin: 0 auto;
+  font-family: sans-serif;
+  background-color: #f9c55e;
+  border-color: black;
+}
+
+body{
+    background-color: #ffd37c;
+}
+
+h1{
+  position: relative;
+  margin-bottom: 30px;
+  background-color: #f9c55e;
+  padding-left: 40%;
+}
+
+h2{
+    position: relative;
+    padding-left: 25%;
+    background-color: #f9c55e;
+}
+
+.field-group {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.field-group label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+.field-group input {
+  width: 100%;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  box-sizing: border-box;
+}
+
+.suggestions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ccc;
+  z-index: 100;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.suggestion {
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.suggestion:hover {
+  background: #efefef;
+}
